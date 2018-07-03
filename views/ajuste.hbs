@@ -1,0 +1,188 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link margin-l-full" href="/admin/login"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-5">
+            <form class="margin-top-20 bg-light p-3 radius">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-danger d-none" id="alert-danger"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-success d-none" id="alert-success"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label for="director"><b>Nombre del Director Actual</b></label>
+                        <input type="text" name="director" class="form-control" id="director">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 offset-8 pl-4">
+                        <button class="btn btn-primary" id="btnAsignar"><b>Actualizar</b></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-7 mt-1">
+            <div class="bg-light p-3 radius">
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>#</th>
+                        <th>Nombre Director</th>
+                        <th>Status</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr id="tableLoading">
+                            <td colspan="3">
+                                <center>
+                                    <img src="/images/ripple.gif" class="full">
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/admin/pdf-ajuste-getdata').then( res => {
+                var data = res.data;
+                if(data.dirs == null) {
+                    $('#table').removeAttr('table');
+                    $('#tableLoading').remove();
+                    $('#tbodyTabla').append('<tr><td colspan="3"><b>Aun no se ha registrado un director.</b></td></tr>');
+                } else {
+                    $('#tableLoading').remove();
+                    $('#alert-success').addClass('d-none');
+                    $.each(data.dirs, (i, dir) => {
+                        if(dir.status == true) {
+                            $('#tbodyTabla')
+                                .append(`<tr>
+                                            <td>${i++}</td>
+                                            <td>${dir.director}</td>
+                                            <td>Activo</td>
+                                        </tr>`);
+                        } else {
+                            $('#tbodyTabla')
+                                .append(`<tr>
+                                            <td>${i++}</td>
+                                            <td>${dir.director}</td>
+                                            <td>Inactivo</td>
+                                        </tr>`);
+                        }
+                    });
+                    $('#table').attr('table', 'table');
+                    $('#table').DataTable();
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+    }
+
+    var btnAsignar = document.getElementById('btnAsignar').addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#director').val() != '') {
+            $('#alert-danger').addClass('d-none');
+            var data = {
+                director: $('#director').val()
+            };
+            axios.post('/admin/pdf-update', data).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 200) {
+                    $('#alert-danger').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(data.msg);
+                    $('#tbodyTabla tr').remove();
+                    $('#tbodyTabla').append(`<tr id="tableLoading">
+                                                <td colspan="3">
+                                                    <center>
+                                                        <img src="/images/ripple.gif" class="full">
+                                                    </center>
+                                                </td>
+                                            </tr>`);
+                    axios.get('/admin/pdf-ajuste-getdata').then( res => {
+                        var data = res.data;
+                        if(data.dirs == null) {
+                            $('#table').removeAttr('table');
+                            $('#tableLoading').remove();
+                            $('#tbodyTabla').append('<tr><td colspan="3"><b>Aun no se ha registrado un director.</b></td></tr>');
+                        } else {
+                            $('#tableLoading').remove();
+                            $('#alert-success').addClass('d-none');
+                            $.each(data.dirs, (i, dir) => {
+                                if(dir.status == true) {
+                                    $('#tbodyTabla')
+                                        .append(`<tr>
+                                                    <td>${i++}</td>
+                                                    <td>${dir.director}</td>
+                                                    <td>Activo</td>
+                                                </tr>`);
+                                } else {
+                                    $('#tbodyTabla')
+                                        .append(`<tr>
+                                                    <td>${i++}</td>
+                                                    <td>${dir.director}</td>
+                                                    <td>Inactivo</td>
+                                                </tr>`);
+                                }
+                            });
+                            $('#table').attr('table', 'table');
+                            $('#table').DataTable();
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            }); 
+        } else {
+            $('#alert-danger').removeClass('d-none');
+            $('#alert-danger').text('Por favor, rellene el campo para continuar.');
+        }
+    });
+
+</script>

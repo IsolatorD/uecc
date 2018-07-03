@@ -1,0 +1,281 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link margin-l-full" href="/admin/login"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-5">
+            <form class="margin-top-20 bg-light p-3 radius">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-danger d-none" id="alert-danger"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-success d-none" id="alert-success"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label for="grado"><b>Grado</b></label>
+                        <select id="grado" class="form-control">
+                            <option value="">Seleccione..</option>
+                            <option value="1er">Primer Año</option>
+                            <option value="2do">Segundo Año</option>
+                            <option value="3er">Tercer Año</option>
+                            <option value="4to">Cuarto Año</option>
+                            <option value="5to">Quinto Año</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="seccion"><b>Seccion</b></label>
+                        <select id="seccion" class="form-control">
+                            <option value="">Seleccione..</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label for="estudiante"><b>Estudiante</b></label>
+                        <select id="estudiante" class="form-control">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 offset-8 pl-4">
+                        <button class="btn btn-primary" id="btnAsignar"><b>Asignar Seccion</b></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-7 mt-1">
+            <div class="bg-light p-3 radius">
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>#</th>
+                        <th>Grado</th>
+                        <th>Secciòn</th>
+                        <th>Estudiante</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr id="tableLoading">
+                            <td colspan="4">
+                                <center>
+                                    <img src="/images/ripple.gif" class="full">
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/admin/estudiantes/listar-seccion').then( res => {
+                var data = res.data;
+                if(data.estudiantes == null) {
+                    $('#table').removeAttr('table');
+                    $('#tableLoading').remove();
+                    $('#tbodyTabla').append('<tr><td colspan="4"><b>No hay datos.</b></td></tr>');
+                } else {
+                    $('#tableLoading').remove();
+                    $('#alert-success').addClass('d-none');
+                    $.each(data.estudiantes, (i, estudiante) => {
+                        $('#tbodyTabla')
+                            .append(`<tr>
+                                        <td>${i++}</td>
+                                        <td>${estudiante.grado} Año</td>
+                                        <td>${estudiante.idSeccion.nombre}</td>
+                                        <td>${estudiante.idEstudiante.nombre} ${estudiante.idEstudiante.apellido}</td>
+                                    </tr>`);
+                    });
+                    $('#table').attr('table', 'table');
+                    $('#table').DataTable();
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+            $('#grado').change(() => {
+                if($('#grado').val() != '') {
+                    $('#seccion option').remove();
+                    $('#seccion').append('<option value="">Seleccione...</option>');
+                    $('#estudiante option').remove();
+                    $('#estudiante').append('<option value="">Seleccione...</option>');
+                    var grado = $('#grado').val();
+                    axios.get('/admin/get-secciones/'+grado).then(res => {
+                        var data = res.data;
+                        console.log(data);
+                        if(data.code == 404) {
+                            $('#seccion').append('<option value="">No hay secciones para este grado.</option>');
+                            $('#estudiante').append('<option value="">No hay estudiantes para este grado.</option>');
+                        } else if(data.code == 200) {
+                            $.each(data.secciones, (i, seccion) => {
+                                $('#seccion').append(`<option value="${seccion._id}">${seccion.nombre}</option>`);
+                            });
+                            $.each(data.estudiantes, (i, estudiante) => {
+                                if(estudiante.status == false) {
+                                    $('#estudiante').append(`<option value="${estudiante._id}">${estudiante.nombre} ${estudiante.apellido}</option>`);
+                                }
+                            });
+                        } else if(data.code == 201) {
+                            $.each(data.secciones, (i, seccion) => {
+                                $('#seccion').append(`<option value="${seccion._id}">${seccion.nombre}</option>`);
+                            });
+                            $('#estudiante').append('<option value="">No hay estudiantes para este grado.</option>')
+                        } else if(data.code == 202) {
+                            $('#seccion').append('<option value="">No hay secciones para este grado.</option>');
+                            $.each(data.estudiantes, (i, estudiante) => {
+                                if(estudiante.status == false) {
+                                    $('#estudiante').append(`<option value="${estudiante._id}">${estudiante.nombre} ${estudiante.apellido}</option>`);
+                                }
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                } else {
+                    $('#seccion option').remove();
+                    $('#seccion').append('<option value="">Seleccione...</option>');
+                }
+            });
+        }, 2000);
+    }
+
+    var btnAsignar = document.getElementById('btnAsignar').addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#grado').val() != '' && $('#seccion').val() != '' && $('#estudiante').val() != '') {
+            $('#alert-danger').addClass('d-none');
+            var data = {
+                grado: $('#grado').val(),
+                seccion: $('#seccion').val(),
+                estudiante: $('#estudiante').val()
+            };
+            axios.post('/admin/seccion-estudiantes', data).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 200) {
+                    $('#alert-danger').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(data.msg);
+                    $('#seccion option').remove();
+                    $('#seccion').append('<option value="">Seleccione...</option>');
+                    $('#estudiante option').remove();
+                    $('#estudiante').append('<option value="">Seleccione...</option>');
+                    $('#tbodyTabla tr').remove();
+                    $('#tbodyTabla').append(`<tr id="tableLoading">
+                                                <td colspan="4">
+                                                    <center>
+                                                        <img src="/images/ripple.gif" class="full">
+                                                    </center>
+                                                </td>
+                                            </tr>`);
+                    axios.get('/admin/estudiantes/listar-seccion').then( res => {
+                        var data = res.data;
+                        if(data.estudiantes == null) {
+                            $('#table').removeAttr('table');
+                            $('#tableLoading').remove();
+                            $('#tbodyTabla').append('<tr><td colspan="4"><b>No hay datos.</b></td></tr>');
+                        } else {
+                            $('#tableLoading').remove();
+                            $('#alert-success').addClass('d-none');
+                            $.each(data.estudiantes, (i, estudiante) => {
+                                $('#tbodyTabla')
+                                    .append(`<tr>
+                                                <td>${i++}</td>
+                                                <td>${estudiante.grado} Año</td>
+                                                <td>${estudiante.idSeccion.nombre}</td>
+                                                <td>${estudiante.idEstudiante.nombre} ${estudiante.idEstudiante.apellido}</td>
+                                            </tr>`);
+                            });
+                            $('#table').attr('table', 'table');
+                            $('#table').DataTable();
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                    var grado = $('#grado').val();
+                    axios.get('/admin/get-secciones/'+grado).then(res => {
+                        var data = res.data;
+                        console.log(data);
+                        if(data.code == 404) {
+                            $('#seccion').append('<option value="">No hay secciones para este grado.</option>');
+                            $('#estudiante').append('<option value="">No hay estudiantes para este grado.</option>');
+                        } else if(data.code == 200) {
+                            $.each(data.secciones, (i, seccion) => {
+                                $('#seccion').append(`<option value="${seccion._id}">${seccion.nombre}</option>`);
+                            });
+                            $.each(data.estudiantes, (i, estudiante) => {
+                                if(estudiante.status == false) {
+                                    $('#estudiante').append(`<option value="${estudiante._id}">${estudiante.nombre} ${estudiante.apellido}</option>`);
+                                }
+                            });
+                        } else if(data.code == 201) {
+                            $.each(data.secciones, (i, seccion) => {
+                                $('#seccion').append(`<option value="${seccion._id}">${seccion.nombre}</option>`);
+                            });
+                            $('#estudiante').append('<option value="">No hay estudiantes para este grado.</option>')
+                        } else if(data.code == 202) {
+                            $('#seccion').append('<option value="">No hay secciones para este grado.</option>');
+                            $.each(data.estudiantes, (i, estudiante) => {
+                                if(estudiante.status == false) {
+                                    $('#estudiante').append(`<option value="${estudiante._id}">${estudiante.nombre} ${estudiante.apellido}</option>`);
+                                }
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                } else if(data.code == 402) {
+                    $('#alert-success').addClass('d-none');
+                    $('#alert-danger').removeClass('d-none');
+                    $('#alert-danger').text(data.msg);
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        } else {
+            $('#alert-danger').removeClass('d-none');
+            $('#alert-danger').text('Por favor rellene los campos para continuar.');
+        }
+    });
+
+</script>

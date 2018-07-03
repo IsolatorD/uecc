@@ -1,0 +1,206 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/profesores/"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link margin-l-full" href="/profesores/login"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-5">
+            <form class="margin-top-20 bg-light p-3 radius">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-danger d-none" id="alert-danger"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-success d-none" id="alert-success"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label for="lapso"><b>Lapso</b></label>
+                        <select id="lapso" class="form-control">
+                            <option value="">Seleccione..</option>
+                            <option value="lapso1">Lapso 1</option>
+                            <option value="lapso2">Lapso 2</option>
+                            <option value="lapso3">Lapso 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="nota"><b>Nota</b></label>
+                        <input type="number" min="1" class="form-control" id="nota">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label for="estudiante"><b>Estudiante</b></label>
+                        <select id="estudiante" class="form-control">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 offset-8 pl-4">
+                        <button class="btn btn-primary" id="btnSubirNota"><b>Subir Nota</b></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-7 mt-1">
+            <div class="bg-light p-3 radius">
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>#</th>
+                        <th>Estudiante</th>
+                        <th>Lapso</th>
+                        <th>Nota</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr id="tableLoading">
+                            <td colspan="4">
+                                <center>
+                                    <img src="/images/ripple.gif" class="full">
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var btnSubirNota = document.getElementById('btnSubirNota');
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/profesores/listado-estudiantes/'+token).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.estudiantes == null) {
+                    $('#btnSubirNota').attr('disabled', 'disabled');
+                    $('#estudiante').append('<option value="">No hay estudiantes en la seccion.</option>');
+                } else {
+                    $('#btnSubirNota').removeAttr('disabled');
+                    $.each(data.estudiantes, (i, estudiante) => {
+                        $('#estudiante').append(`<option value="${estudiante.idEstudiante._id}">${estudiante.idEstudiante.nombre} ${estudiante.idEstudiante.apellido}</option>`);
+                    });
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+            axios.get('/profesores/estudiante/notas/'+token).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.notas == null) {
+                    $('#tableLoading').remove();
+                    $('#tbodyTabla').append('<tr><td colspan="4"><b>Aun no se han cargado notas.</b></td></tr>');
+                } else {
+                    $('#tableLoading').remove();
+                    $.each(data.notas, (i, nota) => {
+                        $('#tbodyTabla').append(`<tr>
+                                                    <td>${i++}</td>
+                                                    <td>${nota.idEstudiante.nombre} ${nota.idEstudiante.apellido}</td>
+                                                    <td>${nota.lapso}</td>
+                                                    <td>${nota.nota}</td>
+                                                </tr>`);
+                    });
+                    $('#table').DataTable();
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+
+        btnSubirNota.addEventListener('click', (e) => {
+            e.preventDefault();
+            if($('#nota').val() != '' && $('#nota').val() != 0 && $('#estudiante').val() != '' && $('#lapso').val() != '') {
+                var datos = {
+                    estudiante: $('#estudiante').val(),
+                    lapso: $('#lapso').val(),
+                    nota: $('#nota').val()
+                };
+                axios.post('/profesores/subir-nota/'+token, datos).then(res => {
+                    var data = res.data;
+                    console.log(data);
+                    if(data.code == 200) {
+                        $('#alert-danger').addClass('d-none');
+                        $('#alert-danger').text('');
+                        $('#alert-success').removeClass('d-none');
+                        $('#alert-success').text(data.msg); 
+                        $('#tbodyTabla tr').remove();
+                        $('#tbodyTable').append(`<tr id="tableLoading">
+                                                <td colspan="4">
+                                                    <center>
+                                                        <img src="/images/ripple.gif" class="full">
+                                                    </center>
+                                                </td>
+                                            </tr>`);
+                        axios.get('/profesores/estudiante/notas/'+token).then(res => {
+                            var data = res.data;
+                            console.log(data);
+                            if(data.notas == null) {
+                                $('#tableLoading').remove();
+                                $('#tbodyTabla').append('<tr><td colspan="4"><b>Aun no se han cargado notas.</b></td></tr>');
+                            } else {
+                                $('#tableLoading').remove();
+                                $.each(data.notas, (i, nota) => {
+                                    $('#tbodyTabla').append(`<tr>
+                                                                <td>${i++}</td>
+                                                                <td>${nota.idEstudiante.nombre} ${nota.idEstudiante.apellido}</td>
+                                                                <td>${nota.lapso}</td>
+                                                                <td>${nota.nota}</td>
+                                                            </tr>`);
+                                });
+                                $('#table').DataTable();
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        });
+                    } else if(data.code == 402) {
+                        $('#alert-danger').removeClass('d-none');
+                        $('#alert-danger').text(data.msg);        
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+            } else {
+                $('#alert-danger').removeClass('d-none');
+                $('#alert-danger').text('Rellene los campos y coloque una nota mayor a 0');
+            }
+        });
+    }
+
+</script>

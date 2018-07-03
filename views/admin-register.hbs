@@ -1,0 +1,106 @@
+<div class="container-fluid bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><b>Inicio</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-10">
+                <h4 class="text-light">Registrate como Administrador</h4>
+                <form class="margin-top-10">
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="alert-success" class="alert alert-success d-none"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="alert-error" class="alert alert-danger d-none"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="nombre" class="text-light"><b>Nombre</b></label>
+                            <input type="text" id="nombre" class="form-control">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="apellido" class="text-light"><b>Apellido</b></label>
+                            <input type="text" id="apellido" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="email" class="text-light"><b>Correo electronico</b></label>
+                            <input type="email" id="email" class="form-control">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="password" class="text-light"><b>Contraseña</b></label>
+                            <input type="password" id="password" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <center>
+                                <button class="btn btn-primary btn-block" id="registerBtn"><b>Registrar</b></button>
+                            </center>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mt-2">
+                            <center>
+                                <a href="/admin/login" class="text-light">¿Ya eres administrador?, Inicia Sesión.</a>
+                            </center>
+                        </div>
+                    </div>
+                </form>
+
+            </center>
+        </div>
+    </div>
+</div>
+
+<script>
+    var registerBtn = document.getElementById('registerBtn');
+
+    registerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#nombre').val() != '' && $('#apellido').val() != '' && $('#email').val() != '' && $('#password').val() != '') {
+            var data = {
+                nombre: $('#nombre').val(),
+                apellido: $('#apellido').val(),
+                email: $('#email').val(),
+                password: $('#password').val()
+            }
+            axios.post('/admin/register', data).then(res => {
+                console.log(res.data);
+                if(res.data.code == 404) {
+                    $('#alert-error').removeClass('d-none');
+                    $('#alert-error').text(res.data.msg);
+                } else if(res.data.code == 402) {
+                    $('#alert-error').removeClass('d-none');
+                    $('#alert-error').text(res.data.msg);
+                } else if(res.data.code == 200) {
+                    $('#alert-error').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(res.data.msg);
+                    window.setTimeout(() => {
+                        window.location.href = '/admin/login';
+                    }, 2000)
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        } else {
+            $('#alert-error').removeClass('d-none');
+            $('#alert-error').text('Por favor rellena el formulario');
+            console.log('ERROR!!')
+        }
+    })
+</script>

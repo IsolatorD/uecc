@@ -1,0 +1,188 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link margin-l-full" href="/admin/login"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-5">
+            <form class="margin-top-20 bg-light p-3 radius">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-success d-none" id="alert-success"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-danger d-none" id="alert-danger"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-7">
+                        <label for="nombre"><b>Nombre de la Seccion</b></label>
+                        <input type="text" id="nombre" class="form-control">
+                    </div>
+                    <div class="form-group col-md-5">
+                        <label for="grado"><b>Grado</b></label>
+                        <select id="grado" class="form-control">
+                            <option value="">Seleccione...</option>
+                            <option value="1er">Primer Año</option>
+                            <option value="2do">Segundo Año</option>
+                            <option value="3er">Tercer Año</option>
+                            <option value="4to">Cuarto Año</option>
+                            <option value="5to">Quinto Año</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 offset-8 pl-4">
+                        <button class="btn btn-primary" id="btnCrearSeccion"><b>Crear Sección</b></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-7 mt-1">
+            <div class="bg-light p-3 radius">
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Grado</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr id="tableLoading">
+                            <td colspan="3">
+                                <center>
+                                    <img src="/images/ripple.gif" class="full">
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var btnCrearSeccion = document.getElementById('btnCrearSeccion');
+    btnCrearSeccion.addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#nombre').val() != '' && $('#grado').val() != ''){
+            var data = {
+                nombre: $('#nombre').val(),
+                grado: $('#grado').val()
+            };
+            if($('#table').attr('table')) {
+                var table = $('#table').DataTable();
+                table.destroy();
+            }
+            axios.post('/admin/crear-seccion', data).then( res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 402) {
+                    $('#alert-danger').removeClass('d-none');
+                    $('#alert-danger').text(data.msg); 
+                } else if(data.code == 200) {
+                    $('#alert-danger').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(data.msg);
+                    $('#tbodyTabla tr').remove();
+                    $('#tbodyTable').append(`<tr id="tableLoading">
+                                                <td colspan="3">
+                                                    <center>
+                                                        <img src="/images/ripple.gif" class="full">
+                                                    </center>
+                                                </td>
+                                            </tr>`);
+                    axios.get('/admin/secciones').then(res2 => {
+                        console.log(res2.data);
+                        var data2 = res2.data;
+                        $('#alert-success').addClass('d-none');
+                        if(data2.secciones == null) {
+                            $('#table').removeAttr('table');
+                            $('#tableLoading').remove();
+                            $('#tbodyTabla').append('<tr><td colspan="3"><b>No hay datos.</b></td></tr>');
+                        } else {
+                            $('#tableLoading').remove();
+                            $.each(data2.secciones, (i, seccion) => {
+                                $('#tbodyTabla').append(`<tr>
+                                                            <td><b>${i++}</b></td>
+                                                            <td><b>${seccion.nombre}</b></td>
+                                                            <td><b>${seccion.grado} Año</b></td>
+                                                        </tr>`);
+                            });
+                            $('#table').attr('table', 'table');
+                            $('#table').DataTable();
+                        }
+                    })
+                    .catch(err2 => {
+                        console.log(err2);
+                    });
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        } else {
+            $('#alert-danger').removeClass('d-none');
+            $('#alert-danger').text('Por favor rellena los campos para continuar');
+        }
+    });
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/admin/secciones').then(res => {
+                console.log(res.data);
+                var data = res.data;
+                $('#alert-success').addClass('d-none');
+                if(data.secciones == null) {
+                    $('#table').removeAttr('table');
+                    $('#tableLoading').remove();
+                    $('#tbodyTabla').append('<tr><td colspan="3"><b>No hay datos.</b></td></tr>');
+                } else {
+                    $('#tableLoading').remove();
+                    $.each(data.secciones, (i, seccion) => {
+                        $('#tbodyTabla').append(`<tr>
+                                                    <td><b>${i++}</b></td>
+                                                    <td><b>${seccion.nombre}</b></td>
+                                                    <td><b>${seccion.grado} Año</b></td>
+                                                </tr>`);
+                    });
+                    $('#table').attr('table', 'table');
+                    $('#table').DataTable();
+                }
+            })
+            .catch(err2 => {
+                console.log(err2);
+            });
+        }, 2000);
+    }
+
+</script>

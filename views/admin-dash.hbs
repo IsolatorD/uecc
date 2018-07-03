@@ -1,0 +1,59 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item margin-l-full">
+                    <a class="nav-link" id="logoutBtn"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <center class="margin-top-10">
+                <a class="btn btn-info mt-4 pl-4 p-4" href="/admin/crear-seccion"><b>Crear Secciones</b></a>
+                <a class="btn btn-info mt-4 ml-4 p-4" href="/admin/agregar-materia"><b>Agregar Materias</b></a>
+                <a class="btn btn-info mt-4 ml-4 p-4" href="/admin/listar-profesores"><b>Listado de Profesores</b></a>
+                <a class="btn btn-info mt-4 ml-4 p-4" href="/admin/listar-alumnos"><b>Listado de Estudiantes</b></a>
+                <br>
+                <a class="btn btn-info mt-4 ml-4 p-4" href="/admin/seccion-profesores"><b>Asignar Sección<br>(Profesores)</b></a>
+                <a class="btn btn-info mt-4 ml-4 p-4" href="/admin/seccion-estudiantes"><b>Asignar Sección<br>(Estudiantes)</b></a>
+                <a class="btn btn-info mt-4 ml-4 p-4" href="/admin/pdf-ajuste"><b>Cambio de Director</b></a>
+            </center>
+        </div>
+    </div>
+</div>
+
+<script>
+    var logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.localStorage.clear();
+        window.location.href = "/admin/login";
+    });
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+        }, 2000);
+    }
+
+</script>

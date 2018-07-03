@@ -1,0 +1,171 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/representantes"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item margin-l-full">
+                    <a class="nav-link" id="logoutBtn"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-7 offset-2 mt-4">
+            <div class="bg-light p-3 radius">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h2 class="text-dark" style="float:left;" id="tituloV">Ver Notas</h2>
+                        <h5 class="text-dark" style="display:none;float:left;" id="nombreEst">Estudiante: <span id="nombre"></span></h5>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="estudiante" name="estudiante" class="form-control">
+                            <option value="">seleccione...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button style="display:none; float:right; margin-bottom:0.5em;" id="btnGNotas" class="btn btn-primary">Generar pdf</button>
+                    </div>
+                </div>
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>#</th>
+                        <th>Grado</th>
+                        <th>Secciòn</th>
+                        <th>Lapso</th>
+                        <th>Materia</th>
+                        <th>Nota</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr id="tableLoading">
+                            <td colspan="6">
+                                <center>
+                                    Seleccione un estudiante para ver sus notas.
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var logoutBtn = document.getElementById('logoutBtn');
+    var btnGNotas = document.getElementById('btnGNotas');
+    var selecEst = document.getElementById('estudiante');
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.localStorage.clear();
+        window.location.href = "/representantes/login";
+    });
+    if(!token) {
+        window.location.href = '/representantes/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/representantes/has-seccion/'+token).then(res => {
+                var data = res.data;
+                console.log(data);
+                $.each(data.hijos, (i, hijo) => {
+                    $('#estudiante').append(`<option value="${hijo._id}">${hijo.nombre} ${hijo.apellido}</option>`);
+                });
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+
+        selecEst.addEventListener('change', (e) => {
+            e.preventDefault();
+            if($('#estudiante').val() != '') {
+                $('#tbodyTabla tr').remove();
+                $('#tbodyTable').append(`<tr id="tableLoading">
+                                        <td colspan="6">
+                                            <center>
+                                                <img src="/images/ripple.gif" class="full">
+                                            </center>
+                                        </td>
+                                    </tr>`);
+                var id = $('#estudiante').val();
+                axios.get('/estudiantes/mis-notas/'+id).then( res => {
+                    var data = res.data;
+                    console.log(data);
+                    if(data.notas == null) {
+                        $('#table').removeAttr('table');
+                        $('#tableLoading').remove();
+                        $('#tbodyTabla').append('<tr><td colspan="6"><b>No hay notas.</b></td></tr>');
+                    } else {
+                        $('#nombre').text($('select[name="estudiante"] option:selected').text());
+                        $('#tableLoading').remove();
+                        $('#alert-success').addClass('d-none');
+                        $('#btnGNotas').css({ display: 'block' });
+                        $.each(data.notas, (i, nota) => {
+                            $('#tbodyTabla')
+                                .append(`<tr>
+                                            <td>${i++}</td>
+                                            <td>${nota.grado} Año</td>
+                                            <td>${nota.idSeccion.nombre}</td>
+                                            <td>${nota.lapso}</td>
+                                            <td>${nota.materia}</td>
+                                            <td>${nota.nota}</td>
+                                        </tr>`);
+                        });
+                        $('#table').attr('table', 'table');
+                        $('#table').DataTable();
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+            } else {
+                var table = $('#table').DataTable();
+                table.destroy();
+                $('#btnGNotas').css({ display: 'none' });
+                $('#table').removeAttr('table');
+                $('#tbodyTabla tr').remove();
+                $('#tbodyTabla').append(`<tr>
+                                            <td colspan="6">
+                                                <center>
+                                                    Seleccione un estudiante para ver sus notas.
+                                                </center>
+                                            </td>
+                                        </tr>`);
+            }
+        })
+        btnGNotas.addEventListener('click', (e) => {
+            e.preventDefault();
+            var table = $('#table').DataTable();
+            table.destroy();
+            $('#btnGNotas').css({ display: 'none' });
+            $('#estudiante').css({ display: 'none' });
+            $('#tituloV').css({ display: 'none' });
+            $('#nombreEst').css({ display: 'block' });
+            window.print();
+            $('#btnGNotas').css({ display: 'block' });
+            $('#estudiante').css({ display: 'block' });
+            $('#tituloV').css({ display: 'block' });
+            $('#nombreEst').css({ display: 'none' });
+            $('#table').DataTable();
+        });
+    }
+</script>

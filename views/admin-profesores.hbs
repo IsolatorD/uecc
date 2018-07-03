@@ -1,0 +1,93 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link margin-l-full" href="/admin/login"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-10 offset-1 margin-top-5">
+            <h3 class="text-light">Listado de Profesores</h3>
+            <div class="bg-light p-3 radius">
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>Cedula</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Telefono</th>
+                        <th>Email</th>
+                        <th>Dirección</th>
+                    </thead>
+                    <tbody id="tbodyTable">
+                        <tr id="loadingTable">
+                            <td colspan="6">
+                                <center>
+                                    <img src="/images/ripple.gif" class="full">
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/admin/listar-profesores/buscar').then( res => {
+                console.log(res.data);
+                var data = res.data;
+                if(data.profesores == null) {
+                    $('#loadingTable').remove();
+                    $('#tbodyTable').append('<tr><td colspan="6"><b>No hay datos.</b></td></tr>');
+                }
+                if(data.profesores != null) {
+                    $('#loadingTable').remove();
+                    $.each(data.profesores, (i, profesor) => {
+                        $('#tbodyTable')
+                            .append(`<tr>
+                                       <td>${profesor.cedula}</td>
+                                       <td>${profesor.nombre}</td>
+                                       <td>${profesor.apellido}</td>
+                                       <td>${profesor.telefono}</td>
+                                       <td>${profesor.email}</td>
+                                       <td>${profesor.direccion}</td>
+                                    </tr>`);
+                    });
+                    $('#table').DataTable();
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+    }
+</script>

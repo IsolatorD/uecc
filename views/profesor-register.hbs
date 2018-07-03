@@ -1,0 +1,168 @@
+<div class="container-fluid bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><b>Inicio</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-5">
+                <h4 class="text-light">Registrarse como Profesor</h4>
+                <form class="margin-top-5">
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="alert-success" class="alert alert-success d-none"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="alert-error" class="alert alert-danger d-none"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="cedula" class="text-light"><b>Cedula</b></label>
+                            <input type="number" min="0" id="cedula" class="form-control">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="telefono" class="text-light"><b>Telefono</b></label>
+                            <input type="text" min="0" id="telefono" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="nombre" class="text-light"><b>Nombre</b></label>
+                            <input type="text" id="nombre" class="form-control">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="apellido" class="text-light"><b>Apellido</b></label>
+                            <input type="text" id="apellido" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-12">
+                            <label for="direccion" class="text-light"><b>Dirección</b></label>
+                            <textarea id="direccion" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="grado" class="text-light"><b>Grado</b></label>
+                            <select id="grado" class="form-control">
+                                <option value="">Seleccione...</option>
+                                <option value="1er">Primer Año</option>
+                                <option value="2do">Segundo Año</option>
+                                <option value="3er">Tercer Año</option>
+                                <option value="4to">Cuarto Año</option>
+                                <option value="5to">Quinto Año</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="materia" class="text-light"><b>Materia</b></label>
+                            <select id="materia" class="form-control">
+                                <option value="">Seleccione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="email" class="text-light"><b>Correo electronico</b></label>
+                            <input type="email" id="email" class="form-control">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="password" class="text-light"><b>Contraseña</b></label>
+                            <input type="password" id="password" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <center>
+                                <button class="btn btn-primary btn-block" id="registerBtn"><b>Registrarse</b></button>
+                            </center>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mt-2">
+                            <center>
+                                <a href="/profesores/login" class="text-light">¿Ya tienes cuenta? Inicia Sesión!</a>
+                            </center>
+                        </div>
+                    </div>
+                </form>
+
+            </center>
+        </div>
+    </div>
+</div>
+
+<script>
+    var gradoSelect = document.getElementById('grado').addEventListener('change',() => {
+            if($('#grado').val() != '') {
+                var grado = $('#grado').val();
+                axios.get('/admin/profesores/'+grado).then(res => {
+                    var data = res.data;
+                    console.log(data);
+                    $('#materia option').remove();
+                    $('#materia').append('<option value="">Seleccione...</option>');
+                    if(data.code == 404) {
+                        $('#materia').append('<option value="">No hay Materias para este grado.</option>');
+                    } else if(data.code == 200) {
+                        $.each(data.materias, (i, materia) => {
+                            $('#materia').append(`<option value="${materia.codigo}">${materia.nombre}</option>`)
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+            } else {
+                $('#materia option').remove();
+                $('#materia').append('<option value="">Seleccione...</option>');
+            }
+    });
+
+    var registerBtn = document.getElementById('registerBtn');
+    registerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#cedula').val() != '' && $('#telefono').val() != '' && $('#nombre').val() != '' && $('#apellido').val() != '' && $('#direccion').val() != '' && $('#email').val() != '' && $('#password').val() != '' && $('#grado').val() != '' && $('#materia').val() != '') {
+            var data = {
+                cedula: $('#cedula').val(),
+                telefono: $('#telefono').val(),
+                nombre: $('#nombre').val(),
+                apellido: $('#apellido').val(),
+                direccion: $('#direccion').val(),
+                email: $('#email').val(),
+                password: $('#password').val(),
+                grado: $('#grado').val(),
+                materia: $('#materia').val()
+            };
+            axios.post('/profesores/register', data).then( res => {
+                console.log(res.data);
+                var data = res.data;
+                if(data.code == 402) {
+                    $('#alert-success').addClass('d-none');
+                    $('#alert-error').removeClass('d-none');
+                    $('#alert-error').text(data.msg);        
+                } else if(data.code == 200) {
+                    $('#alert-error').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(data.msg);
+                    window.setTimeout(() => {
+                        window.location.href = '/profesores/login';
+                    }, 2000);
+                }
+            })
+            .catch( err => {
+                console.log(err);
+            });
+        } else {
+            $('#alert-error').removeClass('d-none');
+            $('#alert-error').text('Por favor rellena los campos para continuar');
+        }
+    });
+</script>

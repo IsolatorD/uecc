@@ -1,0 +1,98 @@
+<div class="container-fluid bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="/"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><b>Inicio</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-4 offset-md-4">
+            <center class="margin-top-10">
+                <h4 class="text-light">Inicia Sesión como Administrador</h4>
+                <form class="margin-top-10">
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="alert-success" class="alert alert-success d-none"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="alert-error" class="alert alert-danger d-none"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-12">
+                            <label for="email" class="text-light"><b>Correo electronico</b></label>
+                            <input type="email" id="email" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-12">
+                            <label for="password" class="text-light"><b>Contraseña</b></label>
+                            <input type="password" id="password" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <center>
+                                <button class="btn btn-primary btn-block" id="loginBtn"><b>Entrar</b></button>
+                            </center>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mt-2">
+                            <center>
+                                <a href="/admin/register" class="text-light">Registrate</a>
+                            </center>
+                        </div>
+                    </div>
+                </form>
+
+            </center>
+        </div>
+    </div>
+</div>
+
+<script>
+    var loginBtn = document.getElementById('loginBtn');
+
+    loginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#email').val() != '' && $('#password').val() != '') {
+            var data = {
+                email: $('#email').val(),
+                password: $('#password').val()
+            }
+            axios.post('/admin/login', data).then(res => {
+                console.log(res.data);
+                if(res.data.code == 404) {
+                    $('#alert-error').removeClass('d-none');
+                    $('#alert-error').text(res.data.msg);
+                } else if(res.data.code == 402) {
+                    $('#alert-error').removeClass('d-none');
+                    $('#alert-error').text(res.data.msg);
+                } else if(res.data.code == 200) {
+                    $('#alert-error').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(res.data.msg);
+                    window.localStorage.setItem('user', res.data.user.nombre + ' ' + res.data.user.apellido);
+                    window.localStorage.setItem('token', res.data.token);
+                    window.setTimeout(() => {
+                        window.location.href = '/admin/';
+                    }, 2000)
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        } else {
+            $('#alert-error').removeClass('d-none');
+            $('#alert-error').text('Por favor rellene los campos');
+            console.log('ERROR!!')
+        }
+    })
+</script>

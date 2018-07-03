@@ -1,0 +1,106 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item margin-l-full">
+                    <a class="nav-link" id="logoutBtn"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="alert alert-success d-none" id="alert-success"></div>
+                    <div class="alert alert-danger d-none" id="alert-danger"></div>
+                </div>
+            </div>
+            <center class="margin-top-20">
+                <a class="btn btn-info mt-4 pl-4 p-4" id="Bmis-datos" href="/estudiantes/mis-datos"><b>Mis Datos</b></a>
+                <a class="btn btn-info mt-4 ml-4 pl-4 p-4" id="Bcontancias" href="#"><b>Contancias</b></a>
+                <a class="btn btn-info mt-4 ml-4 pl-4 p-4" id="Bmis-notas" href="/estudiantes/mis-notas"><b>Mis Notas</b></a>
+                <a class="btn btn-info mt-4 ml-4 pl-4 p-4" id="Bmi-horario" href="/estudiantes/horarios"><b>Mi Horario</b></a>
+            </center>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var Bcontancias = document.getElementById('Bcontancias');
+    var logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.localStorage.clear();
+        window.location.href = "/estudiantes/login";
+    });
+    if(!token) {
+        window.location.href = '/estudiantes/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/estudiantes/has-seccion/'+token).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 404) {
+                    window.location.href = '/estudiantes/login';
+                } else if(data.code == 402) {
+                    $('#alert-danger').removeClass('d-none');
+                    $('#alert-success').addClass('d-none');
+                    $('#alert-danger').text(data.msg);
+                    $('#Bmis-notas').removeClass('btn-info');
+                    $('#Bmis-notas').addClass('btn-light');
+                    $('#Bmis-notas').attr('href', '#');
+                    $('#Bmi-horario').removeClass('btn-info');
+                    $('#Bmi-horario').addClass('btn-light');
+                    $('#Bmi-horario').attr('href', '#');
+                } else if(data.code == 200) {
+                    $('#alert-danger').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(data.msg);
+                    $('#Bmis-notas').removeClass('btn-light');
+                    $('#Bmis-notas').addClass('btn-info');
+                    $('#Bmis-notas').attr('href', '/estudiantes/mis-notas');
+                    $('#Bmi-horario').removeClass('btn-light');
+                    $('#Bmi-horario').addClass('btn-info');
+                    $('#Bmi-horario').attr('href', '/estudiantes/horarios');
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+
+        }, 2000);
+        Bcontancias.addEventListener('click', (e) => {
+            e.preventDefault();
+            axios.get('/estudiantes/constancia/'+token).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 200) {
+                    location.href = data.ruta;
+                }
+            })
+            .catch( err => {
+                console.log(err);
+            });
+        });
+    }
+
+</script>

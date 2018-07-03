@@ -1,0 +1,108 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item margin-l-full">
+                    <a class="nav-link" id="logoutBtn"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="alert alert-success d-none" id="alert-success"></div>
+                    <div class="alert alert-danger d-none" id="alert-danger"></div>
+                </div>
+            </div>
+            <center class="margin-top-20">
+                <a class="btn btn-info mt-4 pl-4 p-4" id="Bver-constancias" href="#" data-toggle="modal" data-target="#exampleModal"><b>Constancias</b></a>
+                <a class="btn btn-info mt-4 ml-4 pl-4 p-4" id="Bver-notas" href="/representantes/ver-notas"><b>Ver Notas</b></a>
+            </center>
+        </div>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Constancias</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="rowModal" class="row">
+                    
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.localStorage.clear();
+        window.location.href = "/representantes/login";
+    });
+    if(!token) {
+        window.location.href = '/representantes/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/representantes/has-seccion/'+token).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 200) {
+                    $.each(data.hijos, (i, hijo) => {
+                        var hijoId = hijo._id;
+                        var id = hijoId.toString();
+                        $('#rowModal').append(`<div class="col-md-4 ml-1 mr-1 mt-1 mb-1">
+                                    <button class="btn btn-primary" onclick='getConstancia(${id})'>${hijo.nombre} ${hijo.apellido}</button>
+                                </div>`);
+                    });
+                } else if(data.code == 404) {
+                    window.localStorage.clear();
+                    window.location.href = "/representantes/login";
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+
+        function getConstancia(id) {
+            axios.get('/estudiantes/constancia/'+id).then(res => {
+                var data = res.data;
+                console.log(data);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }
+    }
+
+</script>

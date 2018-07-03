@@ -1,0 +1,45 @@
+.fondo {
+  background: url('/images/portada.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.container-fluid {
+  height: 43em;
+}
+
+.radius {
+  border-radius: 10px;
+}
+
+.margin-top-5 {
+  margin-top: 5%;
+}
+
+.margin-top-8 {
+  margin-top: 8%;
+}
+
+.margin-top-10 {
+  margin-top: 10%;
+}
+
+.margin-top-20 {
+  margin-top: 20%;
+}
+
+.margin-top-50 {
+  margin-top: 50%;
+}
+
+.margin-l-full {
+  margin-left: 50em;
+}
+
+.float-r {
+  float: right;
+}
+
+.float-l {
+  float: left;
+}

@@ -1,0 +1,109 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/estudiantes"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item margin-l-full">
+                    <a class="nav-link" id="logoutBtn"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-7 offset-2 mt-4">
+            <div class="bg-light p-3 radius">
+                <h2 class="text-dark" style="float:left;">Mi Horario</h2>
+                <button style="float:right; margin-bottom:0.5em;" id="btnGNotas" class="btn btn-primary">Generar pdf</button>
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>#</th>
+                        <th>Materia</th>
+                        <th>Dia</th>
+                        <th>hora</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr id="tableLoading">
+                            <td colspan="4">
+                                <center>
+                                    <img src="/images/ripple.gif" class="full">
+                                </center>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var logoutBtn = document.getElementById('logoutBtn');
+    var btnGNotas = document.getElementById('btnGNotas');
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.localStorage.clear();
+        window.location.href = "/estudiantes/login";
+    });
+    if(!token) {
+        window.location.href = '/estudiantes/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/estudiantes/horarios/'+token).then( res => {
+                var data = res.data;
+                console.log(data);
+                if(data.mats == null) {
+                    $('#table').removeAttr('table');
+                    $('#tableLoading').remove();
+                    $('#tbodyTabla').append('<tr><td colspan="4"><b>No hay notas.</b></td></tr>');
+                } else {
+                    $('#tableLoading').remove();
+                    $('#alert-success').addClass('d-none');
+                    $.each(data.mats, (i, mat) => {
+                        $('#tbodyTabla')
+                            .append(`<tr>
+                                        <td>${i++}</td>
+                                        <td>${mat.codigoMateria} Año</td>
+                                        <td>${mat.dia}</td>
+                                        <td>${mat.horaI} AM</td>
+                                    </tr>`);
+                    });
+                    $('#table').attr('table', 'table');
+                    $('#table').DataTable();
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+        btnGNotas.addEventListener('click', (e) => {
+            e.preventDefault();
+            var table = $('#table').DataTable();
+            table.destroy();
+            $('#btnGNotas').css({ display: 'none' });
+            window.print();
+            $('#btnGNotas').css({ display: 'block' });
+            $('#table').DataTable();
+        });
+    }
+
+</script>

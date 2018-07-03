@@ -1,0 +1,221 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link margin-l-full" href="/admin/login"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-5">
+            <form class="margin-top-10 bg-light p-3 radius" id="form-horarios">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-danger d-none" id="alert-danger"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-success d-none" id="alert-success"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label for="grado"><b>Grado</b></label>
+                        <select id="grado" class="form-control" name="grado">
+                            <option value="">Seleccione..</option>
+                            <option value="1er">Primer Año</option>
+                            <option value="2do">Segundo Año</option>
+                            <option value="3er">Tercer Año</option>
+                            <option value="4to">Cuarto Año</option>
+                            <option value="5to">Quinto Año</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="seccion"><b>Seccion</b></label>
+                        <select id="seccion" class="form-control" name="seccion">
+                            <option value="">Seleccione..</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label for="profesor"><b>Profesor</b></label>
+                        <select id="profesor" class="form-control" name="profesor">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="materia"><b>Materia</b></label>
+                        <input type="text" readonly="readonly" class="form-control" id="materia">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-6">
+                        <label for="horaI"><b>Hora de Inicio</b></label>
+                        <select class="form-control" name="horaI" id="horaI">
+                            <option value="">Seleccione...</option>
+                            <option value="7">7:00am</option>
+                            <option value="8">8:00am</option>
+                            <option value="9">9:00am</option>
+                            <option value="10">10:00am</option>
+                            <option value="11">11:00am</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="horaF"><b>Hora de salida</b></label>
+                        <select class="form-control" name="horaF" id="horaF">
+                            <option value="">Seleccione...</option>
+                            <option value="8">8:00am</option>
+                            <option value="9">9:00am</option>
+                            <option value="10">10:00am</option>
+                            <option value="11">11:00am</option>
+                            <option value="12">12:00am</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label for="dia">Dia</label>
+                        <select class="form-control" id="dia" name="dia">
+                            <option value="Lunes">Lunes</option>
+                            <option value="Martes">Martes</option>
+                            <option value="Miercoles">Miercoles</option>
+                            <option value="Jueves">Jueves</option>
+                            <option value="Viernes">Viernes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 offset-8 pl-4">
+                        <button class="btn btn-primary" id="btnAsignar"><b>Asignar bloque</b></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-7 mt-1">
+            <div class="bg-light p-3 radius">
+                <table id="table" class="table table-striped">
+                    <thead class="thead-dark">
+                        <th>Lunes</th>
+                        <th>Martes</th>
+                        <th>Miercoles</th>
+                        <th>Jueves</th>
+                        <th>Viernes</th>
+                    </thead>
+                    <tbody id="tbodyTabla">
+                        <tr>
+                            <td colspan="5">
+                                <b>Seleccione una seccion para cargar el horarios.</b>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var btnAsignar = document.getElementById('btnAsignar');
+    if(!token) {
+        window.location.href = '/admin/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            $('#grado').change((e) => {
+                e.preventDefault();
+                $('#seccion option').remove();
+                $('#seccion').append('<option value="">Seleccione...</option>');
+                if($('#grado').val() != '') {
+                    var grado = $('#grado').val();
+                    axios.get('/admin/getSecciones/'+grado).then(res => {
+                        var data = res.data;
+                        if(data.secciones == null) {
+                            $('#seccion').append('<option value="">No hay secciones para este grado</option>');
+                        } else {
+                            $.each(data.secciones, (i, seccion) => {
+                                $('#seccion').append(`<option value="${seccion._id}">${seccion.nombre}</option>`);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                }
+            });
+            $('#seccion').change((e) => {
+                $('#profesor option').remove();
+                $('#profesor').append('<option value="">Seleccione...</option>');
+                if($('#seccion').val() != '') {
+                    var seccion = $('#seccion').val();
+                    axios.get('/admin/getProfesores/'+seccion).then(res => {
+                        var data = res.data;
+                        console.log(data);
+                        if(data.profesores == null) {
+                            $('#profesor').append('<option value="">No hay profesores asignados a esta seción</option>');
+                        } else {
+                            $.each(data.profesores, (i, profesor) => {
+                                $('#profesor').append(`<option id="${profesor.idProfesor._id}" value="${profesor.idProfesor._id}">${profesor.idProfesor.nombre} ${profesor.idProfesor.apellido}</option>`)
+                                $(`#${profesor.idProfesor._id}`).attr('materia', profesor.codigoMateria);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                }
+            });
+            $('#profesor').change((e) => {
+                e.preventDefault();
+                if($('#profesor').val() != '') {
+                    var profesor = $('#profesor').val();
+                    $('#profesor').attr('materia', $(`#${profesor}`).attr('materia'));
+                    var materia = $('#profesor').attr('materia');
+                    console.log(materia);
+                    axios.get('/admin/getMateria/'+materia).then(res => {
+                        var data = res.data;
+                        console.log(data);
+                        $('#materia').val(data.materia.nombre);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+                } else {
+
+                }
+            });
+        }, 2000);
+
+        btnAsignar.addEventListener('click', (e) => {
+            e.preventDefault();
+            var datos = {
+
+            };
+        });
+        
+    }
+
+</script>

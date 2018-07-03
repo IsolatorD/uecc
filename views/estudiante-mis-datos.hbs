@@ -1,0 +1,181 @@
+<div class="container-fluid" id="loading">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <center class="margin-top-20">
+                <img src="/images/ripple.gif">
+            </center>
+        </div>
+    </div>
+</div>
+<div class="container-fluid bg-dark d-none" id="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#"><b>UECC</b></a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><b id="user"></b></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/estudiantes"><b>Inicio</b></a>
+                </li>
+                <li class="nav-item margin-l-full">
+                    <a class="nav-link" id="logoutBtn"><b>Salir</b></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="bg-light row mt-4">
+                <div class="col-md-12 p-3">
+                    <center>
+                        <h3 class="text-dark">Mis Datos</h3>
+                        <div class="row">
+                            <div class="col-md-6 offset-3">
+                                <div class="alert alert-success d-none" id="alert-success"></div>
+                                <div class="alert alert-danger d-none" id="alert-danger"></div>
+                            </div>
+                        </div>
+                    </center>
+                    <div class="row mt-4">
+                        <div class="form-group col-md-3">
+                            <label for="cedula" class="text-dark"><b>Cedula</b></label>
+                            <input type="number" min="0" id="cedula" class="form-control">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="telefono" class="text-dark"><b>Telefono</b></label>
+                            <input type="text" id="telefono" class="form-control">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="nombre" class="text-dark"><b>Nombre</b></label>
+                            <input type="text" id="nombre" class="form-control">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="apellido" class="text-dark"><b>Apellido</b></label>
+                            <input type="text" id="apellido" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-3">
+                            <label for="email" class="text-dark"><b>Correo electronico</b></label>
+                            <input type="text" id="email" class="form-control">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="password" class="text-dark"><b>Contraseña</b></label>
+                            <input type="text" id="password" class="form-control">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="grado" class="text-dark"><b>Grado Actual</b></label>
+                            <input type="text" readonly="readonly" id="grado" class="form-control">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="seccion" class="text-dark"><b>Sección</b></label>
+                            <input type="text" readonly="readonly" id="seccion" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-8">
+                            <label for="direccion" class="text-dark"><b>Dirección</b></label>
+                            <textarea id="direccion" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group col-md-2 offset-1 mt-4">
+                            <center>
+                                <button class="btn btn-success mt-4" id="btnUpdate">Actualizar</button>
+                                <button class="btn btn-success mt-4 d-none" id="btnDelete">Dar de Baja</button>
+                            </center>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var token = window.localStorage.getItem('token');
+    var user = window.localStorage.getItem('user');
+    var btnDelete = document.getElementById('btnDelete').addEventListener('click', (e) => {
+        e.preventDefault();
+        axios.delete('/estudiantes/dar-de-baja/'+token).then(res => {
+            console.log(res.data);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+    });
+
+    var btnUpdate = document.getElementById('btnUpdate').addEventListener('click', (e) => {
+        e.preventDefault();
+        if($('#nombre').val() != '' && $('#apellido').val() != '' && $('#cedula').val() != '' && $('#telefono').val() != '' && $('#direccion').val() != '' && $('#email').val() != '' && $('#password').val() != '') {
+            var data = {
+                nombre: $('#nombre').val(),
+                apellido: $('#apellido').val(),
+                cedula: $('#cedula').val(),
+                telefono: $('#telefono').val(),
+                direccion: $('#direccion').val(),
+                email: $('#email').val(),
+                password: $('#password').val()
+            };
+            axios.put('/estudiantes/update/'+token, data).then(res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 404) {
+                    window.location.href = "/estudiantes/";
+                } else if(data.code == 200) {
+                    $('#alert-danger').addClass('d-none');
+                    $('#alert-success').removeClass('d-none');
+                    $('#alert-success').text(data.msg);
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+            
+        } else {
+            $('#alert-success').addClass('d-none');
+            $('#alert-danger').removeClass('d-none');
+            $('#alert-danger').text('Por favor rellena los campos para continuar');
+        }
+    });
+
+    var logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.localStorage.clear();
+        window.location.href = "/estudiantes/login";
+    });
+    if(!token) {
+        window.location.href = '/estudiantes/login';
+    } else {
+        window.setTimeout(() =>{ 
+            $('#loading').addClass('d-none');
+            $('#content').removeClass('d-none');
+            $('#user').text(user);
+            axios.get('/estudiantes/mis-datos/'+token).then( res => {
+                var data = res.data;
+                console.log(data);
+                if(data.code == 404) {
+                    window.location.href = "/estudiantes/";
+                } else if(data.code == 200) {
+                    $('#cedula').val(data.estudiante.cedula);
+                    $('#telefono').val(data.estudiante.telefono);
+                    $('#nombre').val(data.estudiante.nombre);
+                    $('#apellido').val(data.estudiante.apellido);
+                    $('#email').val(data.estudiante.email);
+                    $('#password').val(data.estudiante.password);
+                    $('#direccion').val(data.estudiante.direccion);
+                    $('#grado').val(data.estudiante.grado+' Año');
+                    if(data.estudiante.status == false) {
+                        $('#seccion').val('Pendiente por Asignación');
+                    } else {
+                        $('#seccion').val(data.seccion.idSeccion.nombre);
+                    }
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
+        }, 2000);
+    }
+
+</script>
