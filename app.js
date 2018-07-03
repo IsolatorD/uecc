@@ -27,7 +27,8 @@ app.use('/profesores', profesoresRouter);
 app.use('/estudiantes', estudiantesRoutes);
 app.use('/representantes', representantesRouter);
 //MLab: mongodb://yusma:yusma97@ds141796.mlab.com:41796/mediglobal
-mongoose.connect('mongodb://localhost:27017/uecc-12', (err) => {
+//mongodb://localhost:27017/uecc-12
+mongoose.connect('mongodb://yusma:yusma97@ds141796.mlab.com:41796/mediglobal', (err) => {
   if(err) {
     console.log(err);
   } else {
